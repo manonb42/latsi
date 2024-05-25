@@ -5,14 +5,11 @@ Interpretor for LATSI using ocamlex and Menhir
 
 # Execution 
 
-dune build
-dune exec src/main.
-dune exec src/main.exe < test
+dune build && dune exec src/main.exe < test
 
 
 # Distribution du travail :
-Crague Ilian : Parseur
-Baha Manon : Interpreteur + Extensions
+Baha Manon : Interpreteur + Extensions , Crague Ilian : Parseur
 
 
 # Branches Extensions
