@@ -1,7 +1,7 @@
 # latsi
 
 
-Interpretor for LATSI using ocamlex and Menhir
+Interpréteur pour LATSI utilisant Ocamllex et Menhir 
 
 # Execution 
 
