@@ -1,0 +1,5 @@
+1 I = 0
+2 I = I + 1
+3 SI I < 5 ALORS VAVERS 2
+4 IMPRIME I
+5 FIN

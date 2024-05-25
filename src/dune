@@ -1,0 +1,16 @@
+(ocamllex
+ (modules lexer))
+
+(menhir
+  (modules parser)
+  (infer true)
+  (flags --explain --dump))
+
+(executable
+ (name main)
+  (modules ("main"))
+  (libraries lib))
+
+(library
+ (name lib)
+  (modules (:standard \ main)))

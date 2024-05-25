@@ -1,0 +1,7 @@
+34 IMPRIME "Hello"
+43 NL
+45 IMPRIME "World"
+63 NL
+67 IMPRIME "!"
+83 NL
+90 FIN
