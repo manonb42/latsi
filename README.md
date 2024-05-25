@@ -23,7 +23,7 @@ Dans cette branche, on a ajouté diverses fonctionnalités. Les affectations peu
 
 Les erreurs syntaxiques sont correctement rapportées.
 
-## Modern
+## Extensions-2
 
 Dans celle-ci, on reprend les extensions de `Extensions`, mais on enlève les numéros de ligne et on ajoute des boucles `TANT QUE ... { ... }` et `POUR .. DE .. JUSQUE ..`.
 
