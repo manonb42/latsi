@@ -1,0 +1,4 @@
+1 A, B = 5, 3
+3 SI A + B <> 5 ALORS { IMPRIME A, " !"; VAVERS 10 }
+5 IMPRIME A + B
+10 FIN

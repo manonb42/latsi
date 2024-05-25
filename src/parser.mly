@@ -2,78 +2,94 @@
 open Ast
 %}
 
-
-%token SI ALORS
-%token EQ NEQ LTE LT GT GTE
-%token PLUS MOINS MULT DIV
-%token IMPRIME VAVERS ENTREE PG PD FIN REM NL COMMA
-%token EOF CR
-%token<string> STRING
-%token <char> VAR
+%token QUESTION "?" COLON ":"
+%token SAUF SI ALORS SINON
+%token EQ "=" NEQ "<>" LTE "<=" LT "<" GT ">" GTE ">="
+%token ET "ET" OU "OU" PAS "PAS"
+%token PLUS "+" MOINS "-" MULT "*" DIV "/"
+%token PG "(" PD ")"
+%token AG "{" AD "}"
+%token IMPRIME VAVERS ENTREE  FIN REM NL COMMA
+%token SOUSROUTINE RETOURNE
+%token EOF CR SEMI ";"
+%token <string> STRING
+%token <string> VAR
 %token <int> INT
-%start<Ast.programme> input
 
+%nonassoc ALORS
+%nonassoc SINON
+
+%nonassoc "?"
+%nonassoc ":"
+
+%left "OU"
+%left "ET"
+%nonassoc "PAS"
+%nonassoc "=" "<>" "<=" "<" ">" ">="
+%left "+" "-"
+%left "*" "/"
+
+%start<Ast.programme> main
+%start<Ast.ligne> main_ligne
 %%
 
-var: v=VAR { Var v }
-relop:
-  | NEQ { NEQ }
-  | LTE { LTE }
-  | LT { LT }
-  | GT { GT }
-  | GTE { GTE }
-  | EQ { EQ }
+let main := ~=programme; EOF; <>
+let main_ligne := ~=ligne; EOF; <>
+
+let programme :=
+   ~=separated_nonempty_list(CR, ligne); <Programme>
+
+let ligne := n=INT; i=separated_list(";", instr); {Ligne(n, Bloc i)}
+
+let instr :=
+ | "{"; ~=separated_list(";", instr); "}"; <Bloc>
+ | REM; ~=STRING; <Rem>
+ | NL; {NL}
+ | FIN; {Fin}
+ | IMPRIME; ~=separated_nonempty_list(COMMA, expr); <Imprime>
+ | VAVERS; ~=expr; <VaVers>
+ | ENTREE; ~=var_list; <Entree>
+ | SOUSROUTINE; ~=expr; <Call>
+ | RETOURNE; { Return }
+ | ~ = instr_assign; <>
+ | ~ = instr_cond; <>
 
 
-input: p=programme EOF { p }
+let instr_cond :=
+ | SI; ~=expr; ALORS; ~=instr; { SiAlorsSinon(expr, instr, None) }
+ | SAUF; SI; ~=expr; ALORS; ~=instr; { SiAlorsSinon(Unop(UNot, expr), instr, None) }
+ | SI; ~=expr; ALORS; x=instr; SINON; y=instr; { SiAlorsSinon(expr, x, Some y) }
+ | SAUF; SI; ~=expr; ALORS; x=instr; SINON; y=instr; { SiAlorsSinon(Unop(UNot, expr), x, Some y) }
 
-programme: l=separated_nonempty_list(CR, n=INT i=instruction {Ligne (n, i)}) { Programme l }
+let instr_assign :=
+ | v=var_list; "="; e=expr_list; { Let(List.combine v e) }
+ | ~=var; ~=binop; "="; ~=expr; { Let([var, Binop(EVar var, binop, expr)]) }
 
-instruction:
-| IMPRIME s=expr_list { Imprime s}
-| SI e1=expression op=relop e2=expression ALORS i=instruction { Si_Alors (e1, op, e2, i) }
-| VAVERS e=expression { Vavers e }
-| ENTREE vs=var_list { Entree vs }
-| v=VAR EQ e=expression { Let (Var v,e) }
-| FIN { Fin }
-| REM s=STRING { Rem s }
-| NL { NL }
+let expr :=
+ | ~=var; <EVar>
+ | "("; ~=expr; ")"; <>
+ | ~=INT; <Int>
+ | ~=STRING; <String>
+ | ~=unop; ~=expr; <Unop>
+ | e1=expr; ~=relop; e2=expr; { Binop(e1, relop, e2) }
+ | e1=expr; ~=binop; e2=expr; { Binop(e1, binop, e2) }
+ | cond = expr; "?"; x = expr; ":"; y = expr; <Cond>
 
+%inline var_list: v = separated_nonempty_list(COMMA, var) {v}
+%inline expr_list: v = separated_nonempty_list(COMMA, expr) {v}
 
-expr_list: l = separated_nonempty_list(COMMA, expr_or_string) { l }
+%inline unop:
+  | "+" { UPlus }
+  | "-" { UMinus }
+  | "PAS" { UNot }
 
-expr_or_string:
-    | s = STRING     { String s }
-    | e = expression { Expression_s_or_e e }
+%inline relop:
+  | "<>" { Neq } | "<=" { Lte } | "<" { Lt }
+  | ">" { Gt }   | ">=" { Gte } | "=" { Eq }
+  | "ET" { And } | "OU" { Or }
 
-var_list: l = separated_nonempty_list(COMMA, var) { l }
+%inline binop :
+  | "+" { Plus } | "-" { Minus }
+  | "*" { Mul }  | "/" { Div }
 
-
-expression:
-| t=terme { (Plus t) :: [] }
-| t=terme l=operateur_terme_list { (Plus t) :: l }
-| PLUS t=terme l=operateur_terme_list { (Plus t) :: l }
-| MOINS t=terme l=operateur_terme_list { (Moins t) :: l }
-
-
-operateur_terme_list:
-  | op=operateur_terme { [op] }
-  | PLUS t=terme l=operateur_terme_list { (Plus t) :: l }
-  | MOINS t=terme l=operateur_terme_list { (Moins t) :: l }
-
-operateur_terme:
- | t=terme { Plus t }
- | PLUS t=terme { Plus t }
- | MOINS t=terme { Moins t }
-
-terme:
-  |f=facteur fl=op_facteur_list* {Terme (f, fl)}
-
-op_facteur_list:
-  |MULT f=facteur { (Mult, f) }
-  |DIV f=facteur { (Div, f) }
-
-facteur:
-  |v=VAR { Var_f(Var v) }
-  |n=INT { Nombre_f(n) }
-  |PG e=expression PD { Expression_f(e) }
+let var := ~=VAR; <Var>

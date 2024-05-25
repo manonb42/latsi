@@ -1,0 +1,5 @@
+ 10 a, b, c = 1, 3 
+ 20 IMPRIME "a, b, c = ", a, ", ", b,", ", c
+ 31 NL
+ 40 sum, prod = a+b+c, a*b*c
+ 999 FIN

@@ -1,19 +1,34 @@
 {
 open Parser
+
+exception Error of string
 }
 
 let layout = [ ' ' '\t' ]
 
-rule main = parse
-  | layout    { main lexbuf }
+rule token = parse
+  | layout    { token lexbuf }
   | '\n'     { CR }
   | eof      { EOF }
   | '\n' eof { EOF }
   | "SI"      { SI }
-  | "IMPRIME" { IMPRIME }
+  | "SAUF"    { SAUF }
   | "ALORS"   { ALORS }
+  | "SINON"   { SINON }
+  | "?" { QUESTION }
+  | ":" { COLON }
+  | ";" { SEMI }
+  | "{" { AG }
+  | "}" { AD }
+  | "ET"   { ET }
+  | "OU"   { OU }
+  | "PAS"   { PAS }
+  | "ALORS"   { ALORS }
+  | "IMPRIME" { IMPRIME }
   | "VAVERS"  { VAVERS }
   | "ENTREE"  { ENTREE }
+  | "SOUSROUTINE"  { SOUSROUTINE }
+  | "RETOURNE"  { RETOURNE }
   | "FIN" { FIN }
   | "REM" { REM }
   | "NL" { NL }
@@ -31,7 +46,7 @@ rule main = parse
   | ">=" { GTE }
   | "("  { PG }
   | ")"  { PD }
-  | (['A'-'Z'] as x)      { VAR(x) }
+  | (['A'-'Z''a'-'z']* as s) { VAR(s) }
   |'"' ([^'"']* as s) '"' { STRING s }
   | ['0'-'9']+ as n       { INT (int_of_string n) }
-  | _                     { failwith "unexpected character" }
+  | _                     { raise @@ Error "unexpected character" }
