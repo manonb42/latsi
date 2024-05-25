@@ -4,13 +4,45 @@
 (menhir
   (modules parser)
   (infer true)
-  (flags --explain --dump))
+  (flags --table --explain --dump -lg 1 -la 1 -lc 2))
 
 (executable
  (name main)
   (modules ("main"))
-  (libraries lib))
+  (libraries lib)
+  (link_deps parserMessages.check)
+)
+
 
 (library
  (name lib)
-  (modules (:standard \ main)))
+  (modules (:standard \ main))
+  (libraries menhirLib))
+
+
+
+;; -----------------------------------------------------------------------------
+;; This is inspired by Menhir's repo. See `main.ml` for more info.
+;; (*  https://gitlab.inria.fr/fpottier/menhir/blob/master/demos/calc-syntax-errors/dune  *)
+
+(rule
+  (deps parserMessages.check)
+  (action (with-stdout-to parserMessages.ml
+    (run menhir
+      %{dep:parser.mly}
+      --compile-errors %{dep:parserMessages.messages})
+  )))
+
+(rule
+  (with-stdout-to parserMessages.auto.messages
+    (run menhir
+       %{dep:parser.mly}
+       --list-errors)))
+
+(rule
+  (with-stdout-to parserMessages.check
+  (run menhir
+    %{dep:parser.mly}
+    --compare-errors %{dep:parserMessages.auto.messages}
+    --compare-errors %{dep:parserMessages.messages}
+  )))

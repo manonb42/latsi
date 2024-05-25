@@ -1,22 +1,39 @@
 {
 open Parser
+
+exception Error of string
 }
 
-let layout = [ ' ' '\t' ]
+let layout = [ ' ' '\t' '\n' ]
 
-rule main = parse
-  | layout    { main lexbuf }
-  | '\n'     { CR }
+rule token = parse
+  | layout    { token lexbuf }
   | eof      { EOF }
   | '\n' eof { EOF }
   | "SI"      { SI }
-  | "IMPRIME" { IMPRIME }
+  | "SAUF"    { SAUF }
   | "ALORS"   { ALORS }
-  | "VAVERS"  { VAVERS }
+  | "SINON"   { SINON }
+  | "?" { QUESTION }
+  | ":" { COLON }
+  | ";" { SEMI }
+  | "{" { AG }
+  | "}" { AD }
+  | "ET"   { ET }
+  | "OU"   { OU }
+  | "PAS"   { PAS }
+  | "ALORS"   { ALORS }
+  | "IMPRIME" { IMPRIME }
   | "ENTREE"  { ENTREE }
+  | "DEF"  { DEF }
+  | "SOUSROUTINE"  { SOUSROUTINE }
+  | "RETOURNE"  { RETOURNE }
+  | "TANT QUE" { TANTQUE }
+  | "POUR" { POUR }
+  | "DE" { DE }
+  | "JUSQUE" { JUSQUE }
   | "FIN" { FIN }
   | "REM" { REM }
-  | "NL" { NL }
   | "="  { EQ }
   | "+"  { PLUS }
   | "-"  { MOINS }
@@ -31,7 +48,7 @@ rule main = parse
   | ">=" { GTE }
   | "("  { PG }
   | ")"  { PD }
-  | (['A'-'Z'] as x)      { VAR(x) }
+  | (['A'-'Z''a'-'z']* as s) { VAR(s) }
   |'"' ([^'"']* as s) '"' { STRING s }
   | ['0'-'9']+ as n       { INT (int_of_string n) }
-  | _                     { failwith "unexpected character" }
+  | _                     { raise @@ Error "unexpected character" }
